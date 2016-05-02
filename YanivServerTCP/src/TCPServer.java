@@ -70,6 +70,7 @@ public class TCPServer extends Thread {
                         try {
                             Socket client = serverSocket.accept();
 //                            players.add(new Player(client, id++));
+                              // TO FIX update this
                         } catch (IOException ex) {
                             Logger.getLogger(TCPServer.class.getName()).log(Level.SEVERE, null, ex);
                         }
