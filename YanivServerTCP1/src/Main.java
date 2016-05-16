@@ -24,8 +24,8 @@ public class Main {
     
     public Main(){
         this.executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
-        new Thread(new Server(PORT, players));
-        new Thread(new PlayersMonitor(players, executor));
+        new Thread(new Server(PORT, players)).start();
+        new Thread(new PlayersMonitor(players, executor)).start();
     }
     
     public static void main(String[] args) {
