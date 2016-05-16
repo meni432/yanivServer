@@ -13,6 +13,12 @@ public class MessageTask implements Runnable{
     int number;
     int id;
     Object data;
+    Player ouwner;
+    
+    
+    public MessageTask(Player ouwner){
+        this.ouwner = ouwner;
+    }
 
     @Override
     public void run() {
