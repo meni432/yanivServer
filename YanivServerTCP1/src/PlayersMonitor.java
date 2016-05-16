@@ -1,4 +1,5 @@
 
+import ClientClass.MessageNode;
 import java.io.IOException;
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
@@ -37,8 +38,9 @@ public class PlayersMonitor implements Runnable {
                     @Override
                     public void run() {
                         try {
-                            MessageTask read = (MessageTask) player.getInputStream().readObject();
-                            executor.execute(read);
+                            MessageNode read = (MessageNode) player.getInputStream().readObject();
+
+                            executor.execute(new MessageTask(player, read));
                         } catch (IOException | ClassNotFoundException ex) {
                             ex.printStackTrace();
                         }

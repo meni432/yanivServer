@@ -8,7 +8,7 @@ import java.util.Vector;
  * @author Meni Samet
  */
 public class RoomContainer {
-    
+
     private static int NUMBER_OF_PLAYERS = 3;
 
     private static RoomContainer instanse = null;
@@ -32,26 +32,28 @@ public class RoomContainer {
             return playerToRoom.get(p);
         } else {
             Room maxWaitRoom = getMaxWaitRoom();
-            maxWaitRoom.incNumberOfActivePlayers();
             playerToRoom.put(p, maxWaitRoom);
+            maxWaitRoom.insertNewPlayer(p);
             return maxWaitRoom;
         }
     }
-    
-    
-    private synchronized Room getMaxWaitRoom(){
-        if (rooms.isEmpty()){
+
+    private synchronized Room getMaxWaitRoom() {
+        if (rooms.isEmpty()) {
             Room newRoom = new Room(NUMBER_OF_PLAYERS);
             rooms.add(newRoom);
             return newRoom;
         }
         Room maxRoom = rooms.get(0);
         int max = 0;
-        for (int i = 0; i < rooms.size(); i++){
+        for (int i = 0; i < rooms.size(); i++) {
             int numberOfPlayers = rooms.get(i).getNumberOfActivePlayers();
-            if (numberOfPlayers > max &&  numberOfPlayers < NUMBER_OF_PLAYERS){
+            if (numberOfPlayers > max && numberOfPlayers < NUMBER_OF_PLAYERS) {
                 max = numberOfPlayers;
                 maxRoom = rooms.get(i);
+            }
+            if (max == NUMBER_OF_PLAYERS - 1) {
+                return maxRoom;
             }
         }
         return maxRoom;
