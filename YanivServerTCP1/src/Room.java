@@ -17,7 +17,7 @@ public class Room {
     int numOfPlayer;                 // Number of the players.
 
     Cards Deck;                      // Deck - Random deck of cards.
-    Player players[];                // Array of all the players.
+    Vector<Player> players;                // Array of all the players.
     Stack<Vector<Card>> mainPile;    // Stack of all the droped cards (Vector).
     boolean yaniv;
     static int player;
@@ -28,7 +28,7 @@ public class Room {
     public Room(int numOfPlayer) {
         this.numOfPlayer = numOfPlayer;             // Initial the incoming number of players.
         this.Deck = new Cards();                    // Initial randomly the Card deck with all 54 cards.
-        this.players = new Player[numOfPlayer];     // *** Needs to create the players by threads(?)
+        this.players = new Vector<>();              // *** Needs to create the players by threads(?)
         initialMainPile();                          // Added first card to the mainPile.
         createPlayers();                            // Distribute the cards fot all the players and more.
         yaniv = false;
@@ -68,7 +68,7 @@ public class Room {
     private void declareYaniv(int playerIndex, int sum) {
         for (int i = 0; i < numOfPlayer; i++) {
             if (i != playerIndex) {
-                if (players[i].getSum() <= sum) {
+                if (players.get(i).getSum() <= sum) {
                     yaniv = true;
                     //player[i] win with ASSAF
                     // GAME END
@@ -92,9 +92,10 @@ public class Room {
         }
     }
 
-    public void incNumberOfActivePlayers() {
+    public void insertNewPlayer(Player newPlayer) {
         synchronized (activePlayerCounterLock) {
             this.numberOfActivePlayers++;
+            this.players.add(newPlayer);
         }
     }
 
