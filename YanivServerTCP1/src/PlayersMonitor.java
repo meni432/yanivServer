@@ -1,9 +1,14 @@
 
 import ClientClass.MessageNode;
+import com.google.gson.Gson;
 import java.io.IOException;
-import java.util.Vector;
+import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -11,54 +16,109 @@ import java.util.logging.Logger;
  *
  * @author Meni Samet
  */
+class ReaderRunable implements Runnable {
+
+    private final ExecutorService executor;
+    private final Player player;
+
+    public ReaderRunable(ExecutorService executor, Player player) {
+        this.executor = executor;
+        this.player = player;
+    }
+
+    @Override
+    public void run() {
+        try {
+            while (Thread.interrupted() == false) {
+                System.out.println("try read");
+                String read = (String) player.getInputStream().readObject();  // try read from socket
+                Gson gson = new Gson();
+                MessageNode messageNode = gson.fromJson(read, MessageNode.class);
+
+                System.out.println("get message: " + messageNode);
+                executor.execute(new MessageTask(player, messageNode));
+
+                System.out.println("thread finish");
+            }
+        } catch (IOException | ClassNotFoundException ex) {
+//            ex.printStackTrace();
+        }
+    }
+
+}
+
 public class PlayersMonitor implements Runnable {
 
-    private final Vector<Player> players;       // pointer to vector store connected player in this moment
+    private final List<Player> players;       // pointer to vector store connected player in this moment
     private boolean isRunning = false;          // server is running
     private final ExecutorService executor;     // pointer to executor (thread pool) manager
+    ReentrantLock addToListLock;
+    public static int listenerId = 1;
+
+    ExecutorService readerExecutors;
+    HashMap<Player, ReaderRunable> playerToReaderRunable = new HashMap<>();
 
     /**
      * Default Constructor
      *
      * @param players pointer to vector store connected player in this moment
      * @param executor pointer to executor (thread pool) manager
+     * @param addToListLock
      */
-    public PlayersMonitor(final Vector<Player> players, final ExecutorService executor) {
+    public PlayersMonitor(final List<Player> players, final ExecutorService executor, ReentrantLock addToListLock) {
+        Thread.currentThread().setName("Player monitor");
         this.players = players;
         this.isRunning = true;
         this.executor = executor;
+        this.addToListLock = addToListLock;
+        readerExecutors = Executors.newFixedThreadPool(Server.READER_LIMIT);
     }
 
     @Override
     public void run() {
-        while (isRunning) {
-            for (final Player player : players) {                   // pass all player in players vector
-                final boolean[] readSuccess = {false};              // flag that sign if TCP Listrner thread succsses read from socket
-                Thread listener = new Thread("TCP Listener") {
-                    @Override
-                    public void run() {
-                        try {
-                            MessageNode read = (MessageNode) player.getInputStream().readObject();  // try read from socket
-                            executor.execute(new MessageTask(player, read));
-                            readSuccess[0] = true; // turn on flag read
-                        } catch (IOException | ClassNotFoundException ex) {
-                            ex.printStackTrace();
+
+        while (isIsRunning()) {
+            addToListLock.lock();
+            try {
+                for (Player player : players) {
+                    if (playerToReaderRunable.get(player) == null) {
+                        ReaderRunable readerRunable = new ReaderRunable(executor, player);
+                        readerExecutors.execute(readerRunable);
+                        playerToReaderRunable.put(player, readerRunable);
+                        if (playerToReaderRunable.size() == Server.READER_LIMIT) {
+                            readerExecutors.shutdown();
+                            List<Runnable> finish = readerExecutors.shutdownNow();
+                            for (Runnable finiRunnable : finish) {
+                                ReaderRunable current = (ReaderRunable) finiRunnable;
+                                playerToReaderRunable.remove(current);
+                            }
+                            System.out.println("after terminated");
+                            readerExecutors = Executors.newFixedThreadPool(Server.READER_LIMIT);
                         }
                     }
-
-                };
-                listener.start();
-                try {
-                    listener.join(Main.TTW);
-                } catch (InterruptedException ex) {
-                    ex.printStackTrace();
                 }
-                // if can't read in TTW, interrupt the reading
-                if (readSuccess[0] = false) {
-                    listener.interrupt();
-                }
-
+            } finally {
+                addToListLock.unlock();
             }
+        }
+    }
+
+    void shutdownAndAwaitTermination(ExecutorService pool) {
+        pool.shutdown(); // Disable new tasks from being submitted
+        try {
+            // Wait a while for existing tasks to terminate
+            if (!pool.awaitTermination(1000, TimeUnit.MILLISECONDS)) {
+                pool.shutdownNow(); // Cancel currently executing tasks
+                // Wait a while for tasks to respond to being cancelled
+                if (!pool.awaitTermination(1000, TimeUnit.MILLISECONDS)) {
+                    System.err.println("Pool did not terminate");
+                }
+            }
+        } catch (InterruptedException ie) {
+            // (Re-)Cancel if current thread also interrupted
+            pool.shutdownNow();
+            // Preserve interrupt status
+            Thread.currentThread().interrupt();
         }
     }
 

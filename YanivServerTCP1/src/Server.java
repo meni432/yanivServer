@@ -1,73 +1,73 @@
 
+import com.google.gson.Gson;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
-import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 /**
  *
  * @author Meni Samet
  */
-public class Server implements Runnable {
+public class Server {
 
-    int serverPort = 45000; // The port that this server is listening on
-    ServerSocket serverSocket = null;  // Server socket that will listen for incoming connections
-    Thread runningThread = null;
-    boolean isStopped = false;
-    Vector<Player> players = null;
+    private static Server instance = null;
 
-    public Server(int port, final Vector<Player> players) {
-        this.serverPort = port;
-        this.players = players;
+    private static final int PORT = 4600;               // server listener port
+    private static final int NUMBER_OF_THREADS = 5;     // maximum number of thread allowed in thread pool
+    public static final int TTW = 1000;                 // time to wait for reading from socket
+    final List<Player> players = Collections.synchronizedList(new ArrayList<Player>());      // vector that store pointer to all connected Players
+    ExecutorService executor;
+    ReentrantLock addToListLock = new ReentrantLock(true);
+    ServerSocket serverSocket;
+    public static final int READER_LIMIT = 2; 
+
+    /**
+     * default constructor - singleton method
+     */
+    private Server() {
+        this.executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);    // cread new thread pool
+        // run players monitor in diffrent thread
+        startServerConnection();
     }
 
-    @Override
-    public void run() {
-        //open server Socket
+    private void startServerConnection() {
         try {
-            this.serverSocket = new ServerSocket(this.serverPort);
-        } catch (IOException e) {
-            System.err.println("Cannot listen on this port.\n" + e.getMessage());
-            System.exit(1);
+            serverSocket = new ServerSocket(PORT);
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
-        while (!isStopped()) {
-            Socket clientSocket = null;  // socket created by accept
+        new Thread(new ConnectionManager(serverSocket, players, addToListLock), "connection manager").start();                      // run socket server in diffrent thread
+        new Thread(new PlayersMonitor(players, executor, addToListLock), "player monitor").start();
+    }
 
-            try {
-                clientSocket = this.serverSocket.accept(); // wait for a client to connect
-
-            } catch (IOException e) {
-                if (isStopped()) {
-                    System.out.println("IOException: Server Stopped.");
-                    return;
-                }
-                throw new RuntimeException(
-                        "Error accepting client connection", e);    //Accept failed
-            }
-            //server code here ...
-            System.out.println("Server accepts the client connection");
-
-            // Client information               
-            InetAddress addr = clientSocket.getInetAddress();
-            System.out.println("Server: Received a new connection from (" + addr.getHostAddress() + "): " + addr.getHostName() + " on port: " + clientSocket.getPort());
-            String clientInfo = "";
-            clientInfo = "Client on port " + clientSocket.getPort();
-            
-            
-            try {
-                players.add(new Player(clientSocket, addr));
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-            
-
+    /**
+     * get instance singleton run the socket (run only one time)
+     *
+     * @return Main instance
+     */
+    public static Server startServer() {
+        if (instance == null) {
+            instance = new Server();
         }
+        return instance;
+    }
 
+    public static void main(String[] args) {
+        Server.startServer();
     }
-    
-    public boolean isStopped(){
-        return false;
-    }
+
 }

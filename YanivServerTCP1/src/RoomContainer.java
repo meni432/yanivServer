@@ -1,5 +1,11 @@
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 /**
@@ -12,15 +18,15 @@ public class RoomContainer {
     private static RoomContainer instance = null;       // instanse of Class singletone method
     private static int NUMBER_OF_PLAYERS = 3;           // number of player in one room
 
-    private Vector<Room> rooms;                                 // vector that contain all active room in the server
-    private Hashtable<Player, Room> playerToRoom;               // hash map point Player->Room
+    private List<Room> rooms;                                 // vector that contain all active room in the server
+    private Map<Player, Room> playerToRoom;               // hash map point Player->Room
 
     /**
      * default constructor - singleton method
      */
     private RoomContainer() {
-        playerToRoom = new Hashtable<>();
-        rooms = new Vector<>();
+        playerToRoom = Collections.synchronizedMap(new Hashtable<Player, Room>());
+        rooms = Collections.synchronizedList(new ArrayList<Room>());
     }
 
     /**
@@ -40,7 +46,7 @@ public class RoomContainer {
      * @return room for the player
      */
     public Room getRoom(Player p) {
-        if (playerToRoom.contains(p)) {
+        if (playerToRoom.containsKey(p)) {
             return playerToRoom.get(p);
         } else {
             Room maxWaitRoom = getMaxWaitRoom();
@@ -70,6 +76,11 @@ public class RoomContainer {
             if (max == NUMBER_OF_PLAYERS - 1) {
                 return maxRoom;
             }
+        }
+        if (max == 0 && rooms.get(max).getNumberOfActivePlayers() == NUMBER_OF_PLAYERS) {
+            Room newRoom = new Room(NUMBER_OF_PLAYERS);
+            rooms.add(newRoom);
+            return newRoom;
         }
         return maxRoom;
     }

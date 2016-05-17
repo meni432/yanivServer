@@ -24,8 +24,9 @@ public class MessageTask implements Runnable {
 
     // Message Node data
     int messageId;
-    Object data;
-    public MessageNode.MessageSign messageSign;
+    int initData;
+    Vector<Card> vectorCardsData;
+    MessageNode.MessageSign messageSign;
 
     /**
      * default constructor
@@ -35,7 +36,8 @@ public class MessageTask implements Runnable {
      */
     public MessageTask(Player ouwner, MessageNode messageNode) {
         this.messageId = messageNode.id;
-        this.data = messageNode.data;
+        this.initData = messageNode.initData;
+        this.vectorCardsData = messageNode.vectorCardsData;
         this.messageSign = messageNode.messageSign;
         this.ouwner = ouwner;
     }
@@ -58,11 +60,13 @@ public class MessageTask implements Runnable {
                     break;
             }
         }
+        
+        System.out.println("end task");
     }
 
 
     private void dropCard(){
-        Vector<Card> cards = (Vector<Card>)data;
+        Vector<Card> cards = vectorCardsData;
         Room room = RoomContainer.getInstanse().getRoom(ouwner);
         if (ouwner.getIdInRoom() == room.getCurrentTurn()){
             room.dropCards(cards);
@@ -77,7 +81,7 @@ public class MessageTask implements Runnable {
         MessageNode messageNode = new MessageNode();
         messageNode.messageSign = MessageNode.MessageSign.ROOM_INFO;
         Room room = RoomContainer.getInstanse().getRoom(ouwner);
-        messageNode.data = room.getId();
+        messageNode.initData = ouwner.getIdInRoom();
         ouwner.sendMessage(messageNode);
     }
 

@@ -5,11 +5,14 @@
  */
 package ClientClass;
 
+import java.io.Serializable;
+import java.util.Vector;
+
 /**
  *
  * @author Meni Samet
  */
-public class MessageNode {
+public class MessageNode implements Serializable{
     public static enum MessageSign {
         GET_ROOM,
         ROOM_INFO,
@@ -22,6 +25,16 @@ public class MessageNode {
         CARDS_FOR_MAIN_POT
     }
     public int id;
-    public Object data;
+    public int initData;
+    public Vector<Card> vectorCardsData;
     public MessageSign messageSign;
+
+    @Override
+    public String toString() {
+        return "MessageNode{" + "id=" + id + ", initData=" + initData + ", vectorCardsData=" + vectorCardsData + ", messageSign=" + messageSign + '}';
+    }
+
+    
+    
+    
 }

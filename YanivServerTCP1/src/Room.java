@@ -23,10 +23,10 @@ public class Room {
 
     Cards Deck;                      // Deck - Random deck of cards.
     final Vector<Player> players;          // Array of all the players.
-    Stack<Vector<Card>> mainPile;    // Stack of all the droped cards (Vector).
+    Stack<Vector<Card>> mainPile = new Stack<>();    // Stack of all the droped cards (Vector).
     boolean yaniv;
     static int player;
-    
+
     private int currentTurn = -1;
 
     final Object activePlayerCounterLock = new Object();
@@ -65,7 +65,7 @@ public class Room {
     public void dropCards(Vector<Card> dropCards) {
         // Needs to add the drop cards to the mainPile and update the mainPile Layout
         mainPile.add(dropCards);
-        
+
     }
 
     // The function return new card from the deck.
@@ -107,7 +107,7 @@ public class Room {
      */
     public void insertNewPlayer(Player newPlayer) {
         synchronized (activePlayerCounterLock) {
-            this.numberOfActivePlayers++;
+            newPlayer.setIdInRoom(this.numberOfActivePlayers++);
             synchronized (players) {
                 this.players.add(newPlayer);
                 if (players.size() == numOfPlayer) {
@@ -127,7 +127,8 @@ public class Room {
             for (Player player : players) {
                 MessageNode messageNode = new MessageNode();
                 messageNode.messageSign = MessageNode.MessageSign.CARDS_FOR_PLAYER;
-                messageNode.data = player.getCards();
+                messageNode.vectorCardsData = player.getCards();
+
                 player.sendMessage(messageNode);
 
                 // send message game start (set turn to player 0 )
@@ -143,21 +144,25 @@ public class Room {
 
     /**
      * set new turn, and send the new turn to all players
-     * @param currentTurn 
+     *
+     * @param currentTurn
      */
     public synchronized void setCurrentTurn(int currentTurn) {
         this.currentTurn = currentTurn;
-        for (Player player : players){
-            MessageNode messageNode = new MessageNode();
-            messageNode.messageSign = MessageNode.MessageSign.TURN_CHANGE;
-            messageNode.data = currentTurn;
+        synchronized (players) {
+            for (Player player : players) {
+                MessageNode messageNode = new MessageNode();
+                messageNode.messageSign = MessageNode.MessageSign.TURN_CHANGE;
+                messageNode.initData = currentTurn;
+                player.sendMessage(messageNode);
+            }
         }
     }
-    
-    public synchronized void nextTurn(){
+
+    public synchronized void nextTurn() {
         int current = getCurrentTurn();
-  
-        setCurrentTurn(currentTurn%numOfPlayer);
+
+        setCurrentTurn((current + 1) % numOfPlayer);
     }
 
     public int getId() {
