@@ -4,15 +4,8 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Vector;
-import java.util.concurrent.SynchronousQueue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 /**
  *
  * @author Meni Samet
@@ -25,7 +18,7 @@ public class Server implements Runnable {
     boolean isStopped = false;
     Vector<Player> players = null;
 
-    public Server(int port, Vector<Player> players) {
+    public Server(int port, final Vector<Player> players) {
         this.serverPort = port;
         this.players = players;
     }

@@ -16,6 +16,7 @@ import ClientClass.Card; // improt class Card from client Card
  */
 public class Player {
 
+    // Server data
     private int id;
     private static int serialId = 1;
 
@@ -31,7 +32,13 @@ public class Player {
     private int index;
     private int sum;
 
-    public Player(Socket socket, InetAddress inetAddress) throws IOException {
+    /**
+     * default constructor
+     * @param socket pointer to the socket for I\O operation
+     * @param inetAddress network information
+     * @throws IOException 
+     */
+    public Player(final Socket socket, InetAddress inetAddress) throws IOException {
         this.socket = socket;
         this.networkInformation = inetAddress;
         this.id = serialId++;

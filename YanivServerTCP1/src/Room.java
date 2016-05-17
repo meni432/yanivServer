@@ -17,7 +17,7 @@ public class Room {
     int numOfPlayer;                 // Number of the players.
 
     Cards Deck;                      // Deck - Random deck of cards.
-    Vector<Player> players;                // Array of all the players.
+    Vector<Player> players;          // Array of all the players.
     Stack<Vector<Card>> mainPile;    // Stack of all the droped cards (Vector).
     boolean yaniv;
     static int player;
@@ -32,6 +32,7 @@ public class Room {
         initialMainPile();                          // Added first card to the mainPile.
         createPlayers();                            // Distribute the cards fot all the players and more.
         yaniv = false;
+        this.id = serialId++;
     }
 
     protected void initialMainPile() {

@@ -12,6 +12,7 @@ import ClientClass.MessageNode;
  */
 public class MessageTask implements Runnable {
 
+    // Server data
     int number;
     int id;
     final Player ouwner;
@@ -20,12 +21,18 @@ public class MessageTask implements Runnable {
     int messageId;
     int type;
     Object data;
+    public MessageNode.MessageSign messageSign;
 
+    /**
+     * default constructor
+     * @param ouwner Player object that create the task
+     * @param messageNode messageNode that include details from client
+     */
     public MessageTask(Player ouwner, MessageNode messageNode) {
         this.messageId = messageNode.id;
         this.type = messageNode.type;
         this.data = messageNode.data;
-
+        this.messageSign = messageNode.messageSign;
         this.ouwner = ouwner;
     }
 

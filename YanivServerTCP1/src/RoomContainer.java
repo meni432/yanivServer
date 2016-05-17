@@ -9,24 +9,36 @@ import java.util.Vector;
  */
 public class RoomContainer {
 
-    private static int NUMBER_OF_PLAYERS = 3;
+    private static RoomContainer instance = null;       // instanse of Class singletone method
+    private static int NUMBER_OF_PLAYERS = 3;           // number of player in one room
 
-    private static RoomContainer instanse = null;
-    Vector<Room> rooms;
-    Hashtable<Player, Room> playerToRoom;
+    Vector<Room> rooms;                                 // vector that contain all active room in the server
+    Hashtable<Player, Room> playerToRoom;               // hash map point Player->Room
 
+    /**
+     * default constructor - singleton method
+     */
     private RoomContainer() {
         playerToRoom = new Hashtable<>();
         rooms = new Vector<>();
     }
 
+    /**
+     * @return instance of RoomContainer (singleton method)
+     */
     public synchronized RoomContainer getInstanse() {
-        if (instanse == null) {
-            instanse = new RoomContainer();
+        if (instance == null) {
+            instance = new RoomContainer();
         }
-        return instanse;
+        return instance;
     }
 
+    /**
+     * find and return the room for individual Plater
+     *
+     * @param p get room for this player
+     * @return room for the player
+     */
     public Room getRoom(Player p) {
         if (playerToRoom.contains(p)) {
             return playerToRoom.get(p);
@@ -38,6 +50,9 @@ public class RoomContainer {
         }
     }
 
+    /**
+     * @return get the most relevant room to insert player
+     */
     private synchronized Room getMaxWaitRoom() {
         if (rooms.isEmpty()) {
             Room newRoom = new Room(NUMBER_OF_PLAYERS);
