@@ -10,14 +10,18 @@ package ClientClass;
  * @author Meni Samet
  */
 public class MessageNode {
-    public enum MessageSign {
+    public static enum MessageSign {
         GET_ROOM,
+        ROOM_INFO,
         TAKE_FIRST,
         TAKE_LAST,
-        TAKE_FROM_POT
+        TAKE_FROM_POT,
+        TURN_CHANGE,
+        CARDS_FOR_PLAYER,
+        CARDS_FOR_POT,
+        CARDS_FOR_MAIN_POT
     }
     public int id;
-    public int type;
     public Object data;
     public MessageSign messageSign;
 }

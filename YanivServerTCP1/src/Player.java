@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import java.util.Vector;
 
 import ClientClass.Card; // improt class Card from client Card
+import ClientClass.MessageNode;
 
 /**
  *
@@ -29,7 +30,7 @@ public class Player {
     // Game Variable
     private Vector<Card> cards;
     private String name;
-    private int index;
+    private int idInRoom;
     private int sum;
 
     /**
@@ -54,13 +55,37 @@ public class Player {
     public ObjectOutputStream getOutputStream() {
         return outputStream;
     }
+    
+    public void sendMessage(MessageNode messageNode){
+        try {
+            getOutputStream().writeObject(messageNode);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
 
     public int getSum() {
         return sum;
     }
+
+    public Vector<Card> getCards() {
+        return cards;
+    }
     
-    
-    
-    
+     protected void calculateSum() {
+        sum = 0;
+        for (int i = 0; i < cards.size(); i++) {
+            sum += cards.get(i).getVal();
+        }
+    }
+
+    public int getIdInRoom() {
+        return idInRoom;
+    }
+
+    public void setIdInRoom(int idInRoom) {
+        this.idInRoom = idInRoom;
+    }
+     
 
 }

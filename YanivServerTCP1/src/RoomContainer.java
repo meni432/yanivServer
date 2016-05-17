@@ -12,8 +12,8 @@ public class RoomContainer {
     private static RoomContainer instance = null;       // instanse of Class singletone method
     private static int NUMBER_OF_PLAYERS = 3;           // number of player in one room
 
-    Vector<Room> rooms;                                 // vector that contain all active room in the server
-    Hashtable<Player, Room> playerToRoom;               // hash map point Player->Room
+    private Vector<Room> rooms;                                 // vector that contain all active room in the server
+    private Hashtable<Player, Room> playerToRoom;               // hash map point Player->Room
 
     /**
      * default constructor - singleton method
@@ -26,7 +26,7 @@ public class RoomContainer {
     /**
      * @return instance of RoomContainer (singleton method)
      */
-    public synchronized RoomContainer getInstanse() {
+    public static synchronized RoomContainer getInstanse() {
         if (instance == null) {
             instance = new RoomContainer();
         }

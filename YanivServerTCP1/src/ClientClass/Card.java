@@ -62,4 +62,8 @@ public class Card {
         return "" + num + symbol;
     }
 
+    public int getVal() {
+        return val;
+    }
+    
 }

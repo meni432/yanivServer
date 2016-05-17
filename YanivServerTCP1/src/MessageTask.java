@@ -1,5 +1,10 @@
 
+import ClientClass.Card;
 import ClientClass.MessageNode;
+import java.io.IOException;
+import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -19,18 +24,17 @@ public class MessageTask implements Runnable {
 
     // Message Node data
     int messageId;
-    int type;
     Object data;
     public MessageNode.MessageSign messageSign;
 
     /**
      * default constructor
+     *
      * @param ouwner Player object that create the task
      * @param messageNode messageNode that include details from client
      */
     public MessageTask(Player ouwner, MessageNode messageNode) {
         this.messageId = messageNode.id;
-        this.type = messageNode.type;
         this.data = messageNode.data;
         this.messageSign = messageNode.messageSign;
         this.ouwner = ouwner;
@@ -38,7 +42,43 @@ public class MessageTask implements Runnable {
 
     @Override
     public void run() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        if (null != messageSign) {
+
+            switch (messageSign) {
+                case GET_ROOM:
+                    sendRoomInfo();
+                    break;
+                case TAKE_FROM_POT:
+                    getFromPot();
+                    break;
+                case CARDS_FOR_MAIN_POT:
+                    dropCard();
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+
+    private void dropCard(){
+        Vector<Card> cards = (Vector<Card>)data;
+        Room room = RoomContainer.getInstanse().getRoom(ouwner);
+        if (ouwner.getIdInRoom() == room.getCurrentTurn()){
+            room.dropCards(cards);
+        }
+    }
+
+    private void getFromPot() {
+        
+    }
+
+    private void sendRoomInfo() {
+        MessageNode messageNode = new MessageNode();
+        messageNode.messageSign = MessageNode.MessageSign.ROOM_INFO;
+        Room room = RoomContainer.getInstanse().getRoom(ouwner);
+        messageNode.data = room.getId();
+        ouwner.sendMessage(messageNode);
     }
 
 }
