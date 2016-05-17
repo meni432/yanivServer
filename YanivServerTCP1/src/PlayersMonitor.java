@@ -20,6 +20,15 @@ class ReaderRunable implements Runnable {
 
     private final ExecutorService executor;
     private final Player player;
+    private boolean finish = false;
+
+    public boolean isFinish() {
+        return finish;
+    }
+
+    public void resetFinish() {
+        this.finish = false;
+    }
 
     public ReaderRunable(ExecutorService executor, Player player) {
         this.executor = executor;
@@ -29,19 +38,18 @@ class ReaderRunable implements Runnable {
     @Override
     public void run() {
         try {
-            while (Thread.interrupted() == false) {
-                System.out.println("try read");
-                String read = (String) player.getInputStream().readObject();  // try read from socket
-                Gson gson = new Gson();
-                MessageNode messageNode = gson.fromJson(read, MessageNode.class);
+            String read = (String) player.getInputStream().readObject();  // try read from socket
+            Gson gson = new Gson();
+            MessageNode messageNode = gson.fromJson(read, MessageNode.class);
 
-                System.out.println("get message: " + messageNode);
-                executor.execute(new MessageTask(player, messageNode));
+            System.out.println("get message: " + messageNode);
+            executor.execute(new MessageTask(player, messageNode));
 
-                System.out.println("thread finish");
-            }
+            System.out.println("thread finish");
         } catch (IOException | ClassNotFoundException ex) {
 //            ex.printStackTrace();
+        } finally {
+            finish = true;
         }
     }
 
@@ -81,22 +89,36 @@ public class PlayersMonitor implements Runnable {
             addToListLock.lock();
             try {
                 for (Player player : players) {
-                    if (playerToReaderRunable.get(player) == null) {
+//                    if (playerToReaderRunable.get(player) == null) {
+//                        ReaderRunable readerRunable = new ReaderRunable(executor, player);
+//                        readerExecutors.execute(readerRunable);
+//                        playerToReaderRunable.put(player, readerRunable);
+//                        if (playerToReaderRunable.size() == Server.READER_LIMIT) {
+//                            readerExecutors.shutdown();
+//                            List<Runnable> finish = readerExecutors.shutdownNow();
+//                            for (Runnable finiRunnable : finish) {
+//                                ReaderRunable current = (ReaderRunable) finiRunnable;
+//                                playerToReaderRunable.remove(current);
+//                            }
+//                            System.out.println("after terminated");
+//                            readerExecutors = Executors.newFixedThreadPool(Server.READER_LIMIT);
+//                        }
+//                    }
+
+                    if (!playerToReaderRunable.containsKey(player)) {
                         ReaderRunable readerRunable = new ReaderRunable(executor, player);
-                        readerExecutors.execute(readerRunable);
                         playerToReaderRunable.put(player, readerRunable);
-                        if (playerToReaderRunable.size() == Server.READER_LIMIT) {
-                            readerExecutors.shutdown();
-                            List<Runnable> finish = readerExecutors.shutdownNow();
-                            for (Runnable finiRunnable : finish) {
-                                ReaderRunable current = (ReaderRunable) finiRunnable;
-                                playerToReaderRunable.remove(current);
-                            }
-                            System.out.println("after terminated");
-                            readerExecutors = Executors.newFixedThreadPool(Server.READER_LIMIT);
+                        readerExecutors.execute(readerRunable);
+                    } else {
+                        ReaderRunable readerRunable = playerToReaderRunable.get(player);
+                        if (readerRunable.isFinish()){
+                            readerRunable.resetFinish();
+                            readerExecutors.execute(readerRunable);
                         }
                     }
+
                 }
+
             } finally {
                 addToListLock.unlock();
             }
